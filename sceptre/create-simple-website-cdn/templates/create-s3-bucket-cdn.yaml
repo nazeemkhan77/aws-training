@@ -1,0 +1,43 @@
+Parameters:
+  BucketName:
+    Type: String
+    Description: Bucket name
+
+Resources:
+  SimpleS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: {Ref: BucketName}
+  S3BucketCDN:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+        - DomainName: 
+            Fn::Join: ["", [{Ref: SimpleS3Bucket}, ".s3.amazonaws.com"]]
+          Id:
+            Fn::Join: ["", ["S3-", {Ref: SimpleS3Bucket}]]
+          S3OriginConfig:
+            OriginAccessIdentity: 
+              Fn::Join: ["", ["origin-access-identity/cloudfront/",{Ref: CDNIdentity}]]
+        Enabled: True
+        DefaultRootObject: index.html
+        PriceClass: PriceClass_100
+        DefaultCacheBehavior:
+          TargetOriginId:
+            Fn::Join: ["", ["S3-", {Ref: SimpleS3Bucket}]]
+          ViewerProtocolPolicy: redirect-to-https
+          ForwardedValues:
+            QueryString: false
+  CDNIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties : 
+      CloudFrontOriginAccessIdentityConfig : 
+        Comment: 'aws-ecommerce-site Origin Access Identity'
+Outputs:
+  DistributionId:
+    Value:
+      Ref: S3BucketCDN
+  Url:
+    Value:
+      Fn::GetAtt: [S3BucketCDN, DomainName]

@@ -1,0 +1,4 @@
+template_path: create-s3-bucket-cdn.yaml
+
+parameters:
+  BucketName: ecommerce-site-dev
