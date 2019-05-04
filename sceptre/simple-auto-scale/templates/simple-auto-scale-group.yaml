@@ -1,0 +1,15 @@
+Parameters:
+  AutoScaleGroupName:
+    Type: String
+    Description: Auto Scale Group name
+Resources:
+  MyServerGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: { Ref: AutoScaleGroupName }
+      AvailabilityZones:
+        Fn::GetAZs:
+          Ref: "AWS::Region"
+      LaunchConfigurationName: 'simple_auto_scale'
+      MinSize: 1
+      MaxSize: 3

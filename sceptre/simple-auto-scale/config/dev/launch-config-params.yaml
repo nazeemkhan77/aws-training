@@ -1,0 +1,4 @@
+template_path: simple-launch-config.yaml
+
+parameters:
+  LaunchConfigName: simple_auto_scale

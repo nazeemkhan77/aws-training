@@ -1,0 +1,28 @@
+Parameters:
+  AutoScaleGroupName:
+    Type: String
+
+Resources:
+  ScaleUpPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: { Ref: AutoScaleGroupName }
+      Cooldown: '120'
+      ScalingAdjustment: '1'
+  
+  CPUAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: '1'
+      Statistic: Average
+      Threshold: '70'
+      Period: '60'
+      AlarmActions:
+      - Ref: ScaleUpPolicy
+      Namespace: AWS/EC2
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value: {Ref: AutoScaleGroupName}
+      ComparisonOperator: GreaterThanThreshold
+      MetricName: CPUUtilization

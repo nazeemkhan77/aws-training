@@ -1,0 +1,4 @@
+template_path: simple-auto-scale-group.yaml
+
+parameters:
+  AutoScaleGroupName: simple_auto_scale_group
