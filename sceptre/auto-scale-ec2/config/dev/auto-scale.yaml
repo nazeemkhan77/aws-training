@@ -1,0 +1,11 @@
+template_path: auto-scale.yaml
+
+parameters:
+  LaunchConfigName: !stack_output dev/launch-config.yaml::DistributionId
+  AutoScalingGroupName: auto_scale_group
+  MinSize: '1'
+  MaxSize: '3'
+  ScalingInAdjustment: '-1'
+  ScalingOutAdjustment: '1'
+  CPUHighThreshold: '70'
+  CPULowThreshold: '30'

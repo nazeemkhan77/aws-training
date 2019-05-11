@@ -1,0 +1,69 @@
+
+Parameters:
+  LaunchConfigName:
+    Type: String
+    Description: Launch configuration name
+  InstanceType:
+    Type: String
+    Description: Instance Type. For ex, t2.micro
+  ImageId:
+    Type: String
+    Description: AMI Image Idenitifer 
+  KeyPairName:
+    Type: String
+    Description: EC2 Key/Pair Name
+  VpcId:
+    Type: String
+    Description: VPC ARN
+
+Resources:
+  Ec2LaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      LaunchConfigurationName: {Ref: LaunchConfigName}
+      ImageId: {Ref: ImageId}
+      SecurityGroups:
+      - Ref: InstanceSecurityGroup
+      InstanceType: {Ref: InstanceType}
+      KeyName: {Ref: KeyPairName}
+      BlockDeviceMappings:
+      - DeviceName: "/dev/sdb"
+        Ebs:
+          VolumeSize: '1'
+      UserData:
+          Fn::Base64:
+            Fn::Join:
+              - ''
+              - - "#!/bin/bash -xe\n"
+                - 'exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1\n'
+                - '# Install the files and packages \n'
+                - 'yum -y update '
+                - 'sudo amazon-linux-extras install epel '
+                - 'yum -y install stress '
+                - 'stress --cpu 1 --timeout 360 '
+  
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to client host
+      VpcId: { Ref: VpcId }
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+
+Outputs:
+  SecurityGroupId:
+    Value:
+      Ref: InstanceSecurityGroup
+  DistributionId:
+    Value:
+      Ref: Ec2LaunchConfig
+  LaunchConfigName:
+    Value: { Ref: LaunchConfigName }

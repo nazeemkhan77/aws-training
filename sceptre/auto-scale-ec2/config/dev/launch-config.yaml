@@ -1,0 +1,8 @@
+template_path: launch-config.yaml
+
+parameters:
+  LaunchConfigName: auto_scale_launch_config
+  VpcId: 'vpc-0122987a'
+  ImageId: ami-0de53d8956e8dcf80
+  InstanceType: t2.micro
+  KeyPairName: us-east-1-virginia

@@ -1,0 +1,97 @@
+
+Parameters:
+  LaunchConfigName:
+    Type: String
+    Description: Launch configuration name
+  AutoScalingGroupName:
+    Type: String
+    Description: Autoscaling group name
+  MinSize:
+    Type: String
+    Description: Autoscaling group minimum nodes
+  MaxSize:
+    Type: String
+    Description: Autoscaling group maximum nodes
+  ScalingInAdjustment:
+    Type: String
+    Description: Scalein Adjustment nodes
+  ScalingOutAdjustment:
+    Type: String
+    Description: Scaleout Adjustment nodes
+  CPUHighThreshold:
+    Type: String
+    Description: CPU threshold maximum
+  CPULowThreshold:
+    Type: String 
+    Description: CPU threshold minimum
+
+Resources:
+  AutoScaleGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: { Ref: AutoScalingGroupName }
+      AvailabilityZones:
+        Fn::GetAZs:
+          Ref: "AWS::Region"
+      LaunchConfigurationName: { Ref: LaunchConfigName }
+      MinSize: { Ref: MinSize }
+      MaxSize: { Ref: MaxSize }
+
+  ScaleUpPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: { Ref: AutoScaleGroup }
+      Cooldown: '120'
+      ScalingAdjustment: { Ref: ScalingOutAdjustment }
+  
+  ScaleDownPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName:
+        Ref: AutoScaleGroup
+      Cooldown: '120'
+      ScalingAdjustment: { Ref: ScalingInAdjustment }
+  
+  CPUAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: '60'
+      Statistic: Average
+      Threshold: { Ref: CPUHighThreshold }
+      AlarmDescription: Alarm if CPU too high or metric disappears indicating instance
+        is down
+      Period: '60'
+      AlarmActions:
+      - Ref: ScaleUpPolicy
+      Namespace: AWS/EC2
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value: {Ref: AutoScaleGroup}
+      ComparisonOperator: GreaterThanThreshold
+      MetricName: CPUUtilization
+  
+  CPUAlarmLow:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: '60'
+      Statistic: Average
+      Threshold: { Ref: CPULowThreshold }
+      AlarmDescription: Alarm if CPU too low or metric disappears indicating instance
+        is down
+      Period: '60'
+      AlarmActions:
+      - Ref: ScaleDownPolicy
+      Namespace: AWS/EC2
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value:
+          Ref: AutoScaleGroup
+      ComparisonOperator: LessThanThreshold
+      MetricName: CPUUtilization
+
+Outputs:
+  AutoScaleGroup:
+    Value: 
+      Ref: AutoScaleGroup
